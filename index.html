@@ -1583,6 +1583,30 @@
             document.getElementById('welcomePage').style.display = 'none';
             document.getElementById('leaderboardPage').style.display = 'block';
             
+            renderLeaderboard();
+            
+            // الاستماع للتحديثات اللحظية من قاعدة البيانات
+            if (leaderboardListener) {
+                leaderboardListener(); // إيقاف أي استماع سابق
+            }
+            
+            leaderboardListener = db.collection('accounts').onSnapshot(function(snapshot) {
+                accounts = [];
+                snapshot.forEach(function(doc) {
+                    accounts.push(doc.data());
+                });
+                
+                // تحديث اللوحة فقط إذا كانت ظاهرة على الشاشة حالياً
+                if (document.getElementById('leaderboardPage').style.display === 'block') {
+                    renderLeaderboard();
+                }
+            }, function(error) {
+                console.error('خطأ في الاستماع اللحظي:', error);
+            });
+        }
+
+        // دالة لرسم قائمة لوحة المتصدرين على الشاشة
+        function renderLeaderboard() {
             // ترتيب الحسابات حسب المستوى ثم الإكسبي
             var sortedAccounts = accounts.slice().sort(function(a, b) {
                 if (b.level !== a.level) {
@@ -1635,6 +1659,13 @@
         // دالة للعودة إلى لوحة التحكم
         function backToDashboard() {
             stopHeartTimer();
+            
+            // إيقاف الاستماع اللحظي للوحة المتصدرين عند مغادرتها
+            if (leaderboardListener) {
+                leaderboardListener();
+                leaderboardListener = null;
+            }
+            
             document.getElementById('leaderboardPage').style.display = 'none';
             document.getElementById('gamesPage').style.display = 'none';
             document.getElementById('mathGamePage').style.display = 'none';
@@ -2599,6 +2630,7 @@
         // ===== الرياضيات التعليمية =====
         var currentEduOperation = '';
         var eduCorrectAnswers = [];
+        var leaderboardListener = null;
 
         var eduExplanations = {
             add: { title: '➕ الجمع', text: 'الجمع هو ضم عددين أو أكثر للحصول على مجموعهما.\n\nمثال: 3 + 2 = 5\n\nنبدأ بالعدد الأول (3) ونضيف إليه العدد الثاني (2)\nفنحصل على الناتج (5).' },
