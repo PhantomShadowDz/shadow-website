@@ -1252,7 +1252,27 @@
         }
         
         // تحميل الحسابات عند فتح الصفحة
-        loadAccounts();
+        loadAccounts(tryAutoLogin);
+
+        // دالة تسجيل الدخول التلقائي إذا كان هناك جلسة محفوظة على هذا الجهاز
+        function tryAutoLogin() {
+            var savedUsername = localStorage.getItem('currentUser');
+            if (!savedUsername) return;
+            
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === savedUsername) {
+                    var currentAccount = accounts[i];
+                    
+                    document.getElementById('loginForm').classList.remove('active');
+                    document.getElementById('welcomePage').style.display = 'block';
+                    document.getElementById('welcomeName').textContent = currentAccount.name;
+                    
+                    updateLevelDisplay(currentAccount);
+                    updateDailyRewardButton(currentAccount);
+                    break;
+                }
+            }
+        }
 
         function showMessage(text, type) {
             var msg = document.getElementById('message');
@@ -1291,6 +1311,18 @@
             // التحقق من ملء جميع الحقول
             if (username === '' || password === '') {
                 showMessage('⚠️ الرجاء ملء جميع الحقول!', 'error');
+                return;
+            }
+            
+            // التحقق من طول اسم المستخدم
+            if (username.length < 5) {
+                showMessage('⚠️ اسم المستخدم يجب أن يكون 5 أحرف على الأقل!', 'error');
+                return;
+            }
+            
+            // التحقق من طول كلمة المرور
+            if (password.length < 5) {
+                showMessage('⚠️ كلمة المرور يجب أن تكون 5 أحرف على الأقل!', 'error');
                 return;
             }
             
@@ -1364,6 +1396,9 @@
             }
             
             if (accountFound) {
+                // حفظ جلسة الدخول في هذا الجهاز فقط (يبقى مسجلاً بعد التحديث)
+                localStorage.setItem('currentUser', username);
+                
                 // تسجيل الدخول ناجح - عرض معلومات المستخدم
                 document.getElementById('loginForm').classList.remove('active');
                 document.getElementById('welcomePage').style.display = 'block';
@@ -1385,6 +1420,9 @@
         }
 
         function logout() {
+            // حذف جلسة الدخول من هذا الجهاز
+            localStorage.removeItem('currentUser');
+            
             document.getElementById('welcomePage').style.display = 'none';
             showLogin();
             showMessage('👋 تم تسجيل الخروج بنجاح!', 'success');
