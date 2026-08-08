@@ -103,7 +103,7 @@
         .emoji {
             font-size: 3em;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
 
         .message {
@@ -415,6 +415,12 @@
 
         .snake-btn:active {
             background: #764ba2;
+        }
+
+        .avatar-center-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
         }
 
         .avatar-upload-btn {
@@ -966,8 +972,10 @@
         <!-- صفحة الترحيب بعد تسجيل الدخول -->
         <div id="welcomePage" class="welcome-page">
             <div class="profile-header">
-                <img id="welcomeAvatarPreview" src="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;background:white;display:none;margin:0 auto 15px;">
-                <div id="welcomeAvatarPlaceholder" class="profile-avatar">👤</div>
+                <div class="avatar-center-wrap">
+                    <img id="welcomeAvatarPreview" src="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;background:white;display:none;">
+                    <div id="welcomeAvatarPlaceholder" class="profile-avatar" style="margin:0;">👤</div>
+                </div>
                 <div class="level-badge">⭐ المستوى <span id="displayLevel">1</span></div>
                 <h2 style="margin: 10px 0;">مرحباً <span id="welcomeName"></span>! 🎉</h2>
                 <p style="margin: 10px 0 0 0; opacity: 0.9;">أهلاً بك في لوحة التحكم</p>
@@ -979,7 +987,7 @@
                         </div>
                     </div>
                     <div class="xp-text">
-                        <span id="currentXP">0</span> / <span id="requiredXP">100</span> XP
+                        XP <span id="requiredXP">100</span> / <span id="currentXP">0</span>
                     </div>
                 </div>
             </div>
@@ -1027,8 +1035,10 @@
             
             <div class="profile-info" style="text-align: center;">
                 <h3 style="color: #667eea; margin-top: 0;">🖼️ الصورة الشخصية</h3>
-                <img id="infoAvatarPreview" src="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;background:#e0e7ff;display:none;">
-                <div id="infoAvatarPlaceholder" class="profile-avatar" style="margin:0 auto;">👤</div>
+                <div class="avatar-center-wrap">
+                    <img id="infoAvatarPreview" src="" style="width:100px;height:100px;border-radius:50%;object-fit:cover;background:#e0e7ff;display:none;">
+                    <div id="infoAvatarPlaceholder" class="profile-avatar" style="margin:0;">👤</div>
+                </div>
                 <br>
                 <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
                 <button class="avatar-upload-btn" onclick="document.getElementById('avatarFileInput').click()">📷 تغيير الصورة</button>
@@ -1168,9 +1178,9 @@
                     <div></div>
                     <button class="snake-btn" onclick="snakeSetDirection('up')">⬆️</button>
                     <div></div>
-                    <button class="snake-btn" onclick="snakeSetDirection('left')">⬅️</button>
-                    <button class="snake-btn" onclick="snakeSetDirection('down')">⬇️</button>
                     <button class="snake-btn" onclick="snakeSetDirection('right')">➡️</button>
+                    <button class="snake-btn" onclick="snakeSetDirection('down')">⬇️</button>
+                    <button class="snake-btn" onclick="snakeSetDirection('left')">⬅️</button>
                 </div>
                 
                 <button class="submit-answer-btn" style="margin-top:20px;" onclick="startSnakeGame()">🔄 بدء / إعادة اللعبة</button>
