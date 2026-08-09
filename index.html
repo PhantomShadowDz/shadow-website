@@ -1472,6 +1472,9 @@
                     
                     updateLevelDisplay(currentAccount);
                     updateDailyRewardButton(currentAccount);
+                    
+                    // بدء الاستماع اللحظي لتحديثات الحساب
+                    startDashboardListener(savedUsername);
                     break;
                 }
             }
@@ -1615,6 +1618,9 @@
                 // تحديث حالة المكافأة اليومية
                 updateDailyRewardButton(currentAccount);
                 
+                // بدء الاستماع اللحظي لتحديثات الحساب
+                startDashboardListener(username);
+                
                 // تفريغ الحقول
                 document.getElementById('loginUsername').value = '';
                 document.getElementById('loginPassword').value = '';
@@ -1625,6 +1631,9 @@
         }
 
         function logout() {
+            // إيقاف الاستماع اللحظي للحساب
+            stopDashboardListener();
+            
             // حذف جلسة الدخول من هذا الجهاز
             localStorage.removeItem('currentUser');
             
@@ -1881,6 +1890,7 @@
             document.getElementById('infoPage').style.display = 'none';
             document.getElementById('settingsPage').style.display = 'none';
             document.getElementById('welcomePage').style.display = 'block';
+            refreshDashboardDisplay();
         }
 
         // دالة لعرض صفحة الإعدادات
@@ -2895,6 +2905,58 @@
         var currentEduOperation = '';
         var eduCorrectAnswers = [];
         var leaderboardListener = null;
+        var dashboardListener = null;
+
+        // دالة لبدء الاستماع اللحظي لتحديثات حساب المستخدم الحالي
+        function startDashboardListener(username) {
+            if (dashboardListener) {
+                dashboardListener();
+            }
+            
+            dashboardListener = db.collection('accounts').doc(username).onSnapshot(function(doc) {
+                if (doc.exists) {
+                    var data = doc.data();
+                    
+                    // تحديث النسخة المحلية من الحساب
+                    for (var i = 0; i < accounts.length; i++) {
+                        if (accounts[i].username === username) {
+                            accounts[i] = data;
+                            break;
+                        }
+                    }
+                    
+                    // تحديث الواجهة فقط إذا كنا في لوحة التحكم
+                    if (document.getElementById('welcomePage').style.display === 'block') {
+                        updateLevelDisplay(data);
+                        updateDailyRewardButton(data);
+                        updateAvatarDisplay(data.avatar, 'welcomeAvatarPreview', 'welcomeAvatarPlaceholder');
+                    }
+                }
+            }, function(error) {
+                console.error('خطأ في الاستماع اللحظي للحساب:', error);
+            });
+        }
+
+        // دالة لإيقاف الاستماع اللحظي (عند تسجيل الخروج)
+        function stopDashboardListener() {
+            if (dashboardListener) {
+                dashboardListener();
+                dashboardListener = null;
+            }
+        }
+
+        // دالة لتحديث عرض لوحة التحكم من أحدث بيانات محلية متوفرة
+        function refreshDashboardDisplay() {
+            var username = getCurrentUsername();
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === username) {
+                    updateLevelDisplay(accounts[i]);
+                    updateDailyRewardButton(accounts[i]);
+                    updateAvatarDisplay(accounts[i].avatar, 'welcomeAvatarPreview', 'welcomeAvatarPlaceholder');
+                    break;
+                }
+            }
+        }
 
         var eduExplanations = {
             add: { title: '➕ الجمع', text: 'الجمع هو ضم عددين أو أكثر للحصول على مجموعهما.\n\nمثال: 3 + 2 = 5\n\nنبدأ بالعدد الأول (3) ونضيف إليه العدد الثاني (2)\nفنحصل على الناتج (5).' },
@@ -3047,6 +3109,7 @@
         function backToGamesFromMenu() {
             document.getElementById('gamesMenuPage').style.display = 'none';
             document.getElementById('welcomePage').style.display = 'block';
+            refreshDashboardDisplay();
             stopHeartTimer();
         }
 
@@ -3159,7 +3222,21 @@
                 }
             }
             
-            // رسم الطعام كدائرة متوهجة
+            // رسم الطعام كدائرة متوهجة نابضة
+            var pulse = 1 + Math.sin(Date.now() / 150) * 0.15;
+            var foodRadius = (snakeBox / 2 - 1) * pulse;
+            
+            var glow = snakeCtx.createRadialGradient(
+                snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, 0,
+                snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox * 1.2
+            );
+            glow.addColorStop(0, 'rgba(255,68,68,0.35)');
+            glow.addColorStop(1, 'rgba(255,68,68,0)');
+            snakeCtx.fillStyle = glow;
+            snakeCtx.beginPath();
+            snakeCtx.arc(snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox * 1.2, 0, Math.PI * 2);
+            snakeCtx.fill();
+            
             var foodGradient = snakeCtx.createRadialGradient(
                 snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, 1,
                 snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox/1.5
@@ -3168,7 +3245,7 @@
             foodGradient.addColorStop(1, '#ff4444');
             snakeCtx.fillStyle = foodGradient;
             snakeCtx.beginPath();
-            snakeCtx.arc(snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox/2 - 1, 0, Math.PI * 2);
+            snakeCtx.arc(snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, foodRadius, 0, Math.PI * 2);
             snakeCtx.fill();
         }
 
@@ -3222,7 +3299,7 @@
 
         // ===== لعبة السيارات =====
         var carCanvas, carCtx;
-        var carPlayer = {x: 134, y: 220, w: 32, h: 52};
+        var carPlayer = {x: 136, y: 220, w: 28, h: 50};
         var carEnemies = [];
         var carScore = 0;
         var carGold = 0;
@@ -3230,7 +3307,6 @@
         var carRunning = false;
         var carStep = 15;
         var carSpawnTimer = 0;
-        var carRoadOffset = 0;
 
         function showCarGame() {
             currentUsername = getCurrentUsername();
@@ -3253,7 +3329,7 @@
         function startCarGame() {
             if (carInterval) clearInterval(carInterval);
             
-            carPlayer = {x: 127, y: 220, w: 45, h: 45};
+            carPlayer = {x: 136, y: 220, w: 28, h: 50};
             carEnemies = [];
             carScore = 0;
             carGold = 0;
@@ -3286,10 +3362,6 @@
         });
 
         function carGameLoop() {
-            // السرعة تزداد 20% كل 10 نقاط
-            var currentSpeed = 5 * Math.pow(1.2, Math.floor(carScore / 10));
-            carRoadOffset += currentSpeed;
-            
             carSpawnTimer++;
             if (carSpawnTimer > 45) {
                 carSpawnTimer = 0;
@@ -3301,6 +3373,10 @@
                     passed: false
                 });
             }
+            
+            // زيادة السرعة تدريجياً: كل 10 نقاط تزيد السرعة 20%
+            var speedMultiplier = 1 + Math.floor(carScore / 10) * 0.2;
+            var currentSpeed = 5 * speedMultiplier;
             
             for (var i = carEnemies.length - 1; i >= 0; i--) {
                 carEnemies[i].y += currentSpeed;
@@ -3339,22 +3415,20 @@
             carCtx.fillStyle = roadGradient;
             carCtx.fillRect(0, 0, 300, 300);
             
-            // أرصفة جانبية بخطوط تحذيرية
+            // أرصفة جانبية بنمط مخطط
             carCtx.fillStyle = '#5a6270';
             carCtx.fillRect(0, 0, 8, 300);
             carCtx.fillRect(292, 0, 8, 300);
             carCtx.fillStyle = '#ffd700';
-            var dashOffset = carRoadOffset % 20;
-            for (var d = -20; d < 320; d += 20) {
-                carCtx.fillRect(2, d + dashOffset, 4, 10);
-                carCtx.fillRect(294, d + dashOffset, 4, 10);
+            for (var s = 0; s < 300; s += 20) {
+                carCtx.fillRect(0, s, 8, 10);
+                carCtx.fillRect(292, s, 8, 10);
             }
             
-            // خطوط الطريق المتحركة (إحساس بالسرعة)
-            carCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-            carCtx.lineWidth = 3;
-            carCtx.setLineDash([16, 16]);
-            carCtx.lineDashOffset = -(carRoadOffset % 32);
+            // خطوط الطريق
+            carCtx.strokeStyle = 'rgba(255,255,255,0.4)';
+            carCtx.lineWidth = 2;
+            carCtx.setLineDash([12, 12]);
             for (var x = 75; x < 300; x += 75) {
                 carCtx.beginPath();
                 carCtx.moveTo(x, 0);
@@ -3362,91 +3436,57 @@
                 carCtx.stroke();
             }
             carCtx.setLineDash([]);
-            carCtx.lineDashOffset = 0;
             
-            // رسم سيارة اللاعب (مع نوافذ وظل وأضواء)
-            drawCarShape(carCtx, carPlayer.x, carPlayer.y, carPlayer.w, carPlayer.h, '#ffd700', '#2a2a3a', true);
+            // رسم سيارة اللاعب (مع نوافذ وظل)
+            drawCarShape(carCtx, carPlayer.x, carPlayer.y, carPlayer.w, carPlayer.h, '#ffd700', '#333');
             
             // رسم السيارات القادمة بألوان متنوعة
-            var enemyColors = ['#ff4444', '#4da6ff', '#66d966', '#ff8c42', '#c77dff'];
+            var enemyColors = ['#ff4444', '#4da6ff', '#66d966', '#ff8c42'];
             for (var i = 0; i < carEnemies.length; i++) {
                 var color = enemyColors[i % enemyColors.length];
-                drawCarShape(carCtx, carEnemies[i].x, carEnemies[i].y, carEnemies[i].w, carEnemies[i].h, color, '#1a1a1a', false);
+                drawCarShape(carCtx, carEnemies[i].x, carEnemies[i].y, carEnemies[i].w, carEnemies[i].h, color, '#222');
             }
         }
 
         // دالة مساعدة لرسم شكل سيارة بالتفاصيل
-        function drawCarShape(ctx, x, y, w, h, bodyColor, windowColor, isPlayer) {
+        function drawCarShape(ctx, x, y, w, h, bodyColor, windowColor) {
             // ظل خفيف
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            drawRoundedRectPath(ctx, x + 2, y + 4, w, h, 6);
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            drawRoundedRectPath(ctx, x + 2, y + 3, w, h, 6);
             ctx.fill();
             
-            // تدرج لوني على جسم السيارة (لمعان معدني)
-            var carGradient = ctx.createLinearGradient(x, y, x + w, y);
-            carGradient.addColorStop(0, bodyColor);
-            carGradient.addColorStop(0.5, '#ffffff55');
-            carGradient.addColorStop(1, bodyColor);
-            ctx.fillStyle = carGradient;
-            drawRoundedRectPath(ctx, x, y, w, h, 7);
+            // جسم السيارة
+            ctx.fillStyle = bodyColor;
+            drawRoundedRectPath(ctx, x, y, w, h, 6);
             ctx.fill();
             
-            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-            ctx.lineWidth = 1;
-            drawRoundedRectPath(ctx, x, y, w, h, 7);
-            ctx.stroke();
-            
-            // خط سباق جانبي
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.fillRect(x + w / 2 - 1.5, y + 4, 3, h - 8);
-            
-            // النوافذ (زجاج أمامي وخلفي)
+            // النوافذ
             ctx.fillStyle = windowColor;
-            var winW = w * 0.62;
-            drawRoundedRectPath(ctx, x + (w - winW) / 2, y + h * 0.12, winW, h * 0.22, 3);
-            ctx.fill();
-            drawRoundedRectPath(ctx, x + (w - winW) / 2, y + h * 0.62, winW, h * 0.2, 3);
+            var winW = w * 0.6;
+            var winH = h * 0.28;
+            drawRoundedRectPath(ctx, x + (w - winW) / 2, y + h * 0.15, winW, winH, 3);
             ctx.fill();
             
-            // لمعان على الزجاج الأمامي
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            // خط لمعان بسيط على الزجاج
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(x + (w - winW) / 2 + 2, y + h * 0.12 + 2);
-            ctx.lineTo(x + (w - winW) / 2 + winW - 2, y + h * 0.12 + 2);
+            ctx.moveTo(x + (w - winW) / 2 + 2, y + h * 0.15 + 2);
+            ctx.lineTo(x + (w - winW) / 2 + winW - 2, y + h * 0.15 + 2);
             ctx.stroke();
             
             // مرايا جانبية
             ctx.fillStyle = bodyColor;
-            ctx.fillRect(x - 3, y + h * 0.22, 3, 5);
-            ctx.fillRect(x + w, y + h * 0.22, 3, 5);
+            ctx.fillRect(x - 3, y + h * 0.25, 3, 5);
+            ctx.fillRect(x + w, y + h * 0.25, 3, 5);
             
-            // الأضواء الأمامية والخلفية
-            if (isPlayer) {
-                ctx.fillStyle = '#fffab3';
-                ctx.shadowColor = '#ffe066';
-                ctx.shadowBlur = 4;
-                ctx.beginPath();
-                ctx.arc(x + 5, y + 3, 2.2, 0, Math.PI * 2);
-                ctx.arc(x + w - 5, y + 3, 2.2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                
-                ctx.fillStyle = '#ff4d4d';
-                ctx.beginPath();
-                ctx.arc(x + 5, y + h - 3, 1.8, 0, Math.PI * 2);
-                ctx.arc(x + w - 5, y + h - 3, 1.8, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillStyle = '#ff4d4d';
-                ctx.shadowColor = '#ff4d4d';
-                ctx.shadowBlur = 3;
-                ctx.beginPath();
-                ctx.arc(x + 5, y + 3, 2, 0, Math.PI * 2);
-                ctx.arc(x + w - 5, y + 3, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
+            // المصابيح (أمامية صفراء أسفل، خلفية حمراء أعلى)
+            ctx.fillStyle = '#fff9c4';
+            ctx.fillRect(x + 2, y + h - 5, 5, 3);
+            ctx.fillRect(x + w - 7, y + h - 5, 5, 3);
+            ctx.fillStyle = '#ff3b3b';
+            ctx.fillRect(x + 2, y + 2, 5, 3);
+            ctx.fillRect(x + w - 7, y + 2, 5, 3);
             
             // الإطارات (نقاط سوداء صغيرة)
             ctx.fillStyle = '#111';
