@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -376,6 +380,10 @@
             display: none;
         }
 
+        .games-menu-page {
+            display: none;
+        }
+
         .snake-container {
             display: flex;
             flex-direction: column;
@@ -445,9 +453,27 @@
 
         .levels-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
             margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .levels-grid {
+                gap: 8px;
+            }
+            .level-card {
+                padding: 12px 8px;
+            }
+            .level-number {
+                font-size: 1.2em;
+            }
+            .level-reward {
+                font-size: 0.85em;
+            }
+            .level-status {
+                font-size: 0.75em;
+            }
         }
 
         .level-card {
@@ -992,8 +1018,9 @@
                 </div>
             </div>
 
-            <div class="profile-info">
-                <h3 style="color: #667eea; margin-top: 0;">🎮 الأنشطة السريعة</h3>
+            <div class="profile-info dashboard-btn" onclick="showGamesMenuFromDashboard()" style="cursor:pointer; text-align:center; margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin: 0;">🎮 الأنشطة السريعة</h3>
+                <p style="margin:5px 0 0; color:#666; font-size:0.9em;">اضغط هنا للعب!</p>
             </div>
 
             <div class="dashboard-buttons">
@@ -1016,7 +1043,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-logout" onclick="logout()">تسجيل الخروج 🔓</button>
+            <button class="btn btn-logout" style="margin-top: 20px;" onclick="logout()">تسجيل الخروج 🔓</button>
         </div>
 
         <!-- صفحة المعلومات -->
@@ -1155,13 +1182,51 @@
                     <div class="game-title">رياضيات تعليمية</div>
                     <div class="game-desc">تعلم طريقة الحساب خطوة بخطوة!</div>
                 </div>
+            </div>
+        </div>
 
-                <div class="game-card edu-center-card" onclick="showSnakeGame()">
-                    <div class="game-icon">🎮</div>
-                    <div class="game-title">الألعاب</div>
-                    <div class="game-desc">لعبة الثعبان الكلاسيكية الشهيرة!</div>
+        <!-- قائمة اختيار الألعاب -->
+        <div id="gamesMenuPage" class="games-menu-page">
+            <button class="back-button" onclick="backToGamesFromMenu()">← العودة</button>
+            
+            <h2 class="leaderboard-title">🎮 اختر لعبتك 🎮</h2>
+            
+            <div class="games-grid">
+                <div class="edu-operation-card" onclick="showSnakeGame()">
+                    <div class="edu-operation-icon">🐍</div>
+                    <div class="game-title">لعبة الثعبان</div>
+                </div>
+                <div class="edu-operation-card" onclick="showCarGame()">
+                    <div class="edu-operation-icon">🚗</div>
+                    <div class="game-title">لعبة السيارات</div>
+                </div>
+                <div class="edu-operation-card edu-center-card" onclick="showStore()">
+                    <div class="edu-operation-icon">🏪</div>
+                    <div class="game-title">المتجر</div>
                 </div>
             </div>
+        </div>
+
+        <!-- صفحة المتجر -->
+        <div id="storePage" class="games-menu-page">
+            <button class="back-button" onclick="backToGamesFromStore()">← العودة</button>
+            
+            <h2 class="leaderboard-title">🏪 المتجر 🏪</h2>
+            
+            <div class="profile-info" style="text-align:center;">
+                <h3 style="color:#ffa500; margin-top:0;">🪙 رصيدك الحالي</h3>
+                <div style="font-size:2em; font-weight:bold; color:#667eea;"><span id="storeGold">0</span> ذهب</div>
+            </div>
+            
+            <div class="profile-info" style="text-align:center;">
+                <h3 style="color:#667eea; margin-top:0;">🔄 استبدال الذهب بـ XP</h3>
+                <p style="color:#666;">كل 1 ذهب = 10 XP</p>
+                <button class="submit-answer-btn" onclick="exchangeGold(1)">استبدال 1 ذهب ← 10 XP</button>
+                <br><br>
+                <button class="submit-answer-btn" style="background:#28a745;" onclick="exchangeAllGold()">💰 استبدال كل الذهب</button>
+            </div>
+            
+            <div id="storeMessage" class="result-message" style="display:none;"></div>
         </div>
 
         <!-- صفحة لعبة الثعبان -->
@@ -1184,6 +1249,29 @@
                 </div>
                 
                 <button class="submit-answer-btn" style="margin-top:20px;" onclick="startSnakeGame()">🔄 بدء / إعادة اللعبة</button>
+            </div>
+        </div>
+
+        <!-- صفحة لعبة السيارات -->
+        <div id="carGamePage" class="snake-game-page">
+            <button class="back-button" onclick="backToGamesMenuFromCar()">← العودة</button>
+            
+            <h2 class="leaderboard-title">🚗 لعبة السيارات 🚗</h2>
+            
+            <div class="snake-container">
+                <div class="snake-score">النقاط: <span id="carScore">0</span></div>
+                <canvas id="carCanvas" width="300" height="300"></canvas>
+                
+                <div class="snake-controls">
+                    <div></div>
+                    <button class="snake-btn" onclick="carMove('up')">⬆️</button>
+                    <div></div>
+                    <button class="snake-btn" onclick="carMove('right')">➡️</button>
+                    <button class="snake-btn" onclick="carMove('down')">⬇️</button>
+                    <button class="snake-btn" onclick="carMove('left')">⬅️</button>
+                </div>
+                
+                <button class="submit-answer-btn" style="margin-top:20px;" onclick="startCarGame()">🔄 بدء / إعادة اللعبة</button>
             </div>
         </div>
 
@@ -1461,7 +1549,8 @@
                 mathLevelsCompleted: 0,
                 arabicLevelsCompleted: 0,
                 gameHearts: 3,
-                lastHeartLoss: null
+                lastHeartLoss: null,
+                gold: 0
             };
             
             // حفظ الحساب مباشرة في Firestore والانتظار حتى يتأكد الحفظ فعلياً
@@ -1546,7 +1635,7 @@
 
         // دالة لحساب الإكسبي المطلوب للليفل
         function getRequiredXP(level) {
-            return Math.floor(100 * Math.pow(1.5, level - 1));
+            return Math.floor(100 * Math.pow(1.3, level - 1));
         }
 
         // دالة لتحديث عرض الليفل والإكسبي
@@ -2086,30 +2175,30 @@
         // البيانات الخاصة بلعبة الرياضيات - 25 مرحلة متنوعة
         var mathLevels = [
             { level: 1, questions: [{q: "5 + 4", a: 9}, {q: "8 - 3", a: 5}, {q: "6 + 7", a: 13}], reward: 50 },
-            { level: 2, questions: [{q: "21 + 15", a: 36}, {q: "45 - 18", a: 27}, {q: "67 + 28", a: 95}], reward: 75 },
-            { level: 3, questions: [{q: "82 - 39", a: 43}, {q: "56 + 47", a: 103}, {q: "91 - 28", a: 63}], reward: 112 },
-            { level: 4, questions: [{q: "50 - 18", a: 32}, {q: "3 × 4", a: 12}, {q: "64 + 29", a: 93}], reward: 168 },
-            { level: 5, questions: [{q: "5 × 7", a: 35}, {q: "127 - 58", a: 69}, {q: "6 × 8", a: 48}], reward: 252 },
-            { level: 6, questions: [{q: "144 ÷ 12", a: 12}, {q: "9 × 9", a: 81}, {q: "234 + 178", a: 412}], reward: 378 },
-            { level: 7, questions: [{q: "15 × 8", a: 120}, {q: "196 ÷ 14", a: 14}, {q: "450 - 267", a: 183}], reward: 567 },
-            { level: 8, questions: [{q: "√16", a: 4}, {q: "12 × 11", a: 132}, {q: "720 ÷ 18", a: 40}], reward: 850 },
-            { level: 9, questions: [{q: "25 × 12", a: 300}, {q: "√81", a: 9}, {q: "1000 - 347", a: 653}], reward: 1275 },
-            { level: 10, questions: [{q: "432 ÷ 16", a: 27}, {q: "45 × 22", a: 990}, {q: "√144", a: 12}], reward: 1912 },
-            { level: 11, questions: [{q: "√225", a: 15}, {q: "1500 - 847", a: 653}, {q: "63 × 14", a: 882}], reward: 2868 },
-            { level: 12, questions: [{q: "2400 ÷ 48", a: 50}, {q: "√169", a: 13}, {q: "3456 + 2789", a: 6245}], reward: 4302 },
-            { level: 13, questions: [{q: "89 × 37", a: 3293}, {q: "5000 - 2847", a: 2153}, {q: "√256", a: 16}], reward: 6453 },
-            { level: 14, questions: [{q: "√361", a: 19}, {q: "3600 ÷ 72", a: 50}, {q: "456 × 23", a: 10488}], reward: 9679 },
-            { level: 15, questions: [{q: "125 × 88", a: 11000}, {q: "√400", a: 20}, {q: "9876 - 5432", a: 4444}], reward: 14518 },
-            { level: 16, questions: [{q: "7200 ÷ 144", a: 50}, {q: "234 × 56", a: 13104}, {q: "√529", a: 23}], reward: 21777 },
-            { level: 17, questions: [{q: "√625", a: 25}, {q: "15000 - 8763", a: 6237}, {q: "789 × 45", a: 35505}], reward: 32665 },
-            { level: 18, questions: [{q: "456 × 123", a: 56088}, {q: "√729", a: 27}, {q: "28800 ÷ 360", a: 80}], reward: 48997 },
-            { level: 19, questions: [{q: "√841", a: 29}, {q: "50000 - 27845", a: 22155}, {q: "1234 × 56", a: 69104}], reward: 73495 },
-            { level: 20, questions: [{q: "98765 ÷ 235", a: 420}, {q: "999 × 111", a: 110889}, {q: "√961", a: 31}], reward: 110242 },
-            { level: 21, questions: [{q: "√1024", a: 32}, {q: "123456 - 67890", a: 55566}, {q: "4567 × 89", a: 406463}], reward: 165363 },
-            { level: 22, questions: [{q: "5678 × 234", a: 1328652}, {q: "√1225", a: 35}, {q: "750000 ÷ 1500", a: 500}], reward: 248044 },
-            { level: 23, questions: [{q: "√1369", a: 37}, {q: "999999 - 456789", a: 543210}, {q: "8901 × 234", a: 2082834}], reward: 372066 },
-            { level: 24, questions: [{q: "12345 × 678", a: 8369910}, {q: "√1521", a: 39}, {q: "9876543 ÷ 321", a: 30767}], reward: 558099 },
-            { level: 25, questions: [{q: "√1681", a: 41}, {q: "5000000 - 2345678", a: 2654322}, {q: "99999 × 11", a: 1099989}], reward: 837148 }
+            { level: 2, questions: [{q: "21 + 15", a: 36}, {q: "45 - 18", a: 27}, {q: "67 + 28", a: 95}], reward: 55 },
+            { level: 3, questions: [{q: "82 - 39", a: 43}, {q: "56 + 47", a: 103}, {q: "91 - 28", a: 63}], reward: 61 },
+            { level: 4, questions: [{q: "50 - 18", a: 32}, {q: "3 × 4", a: 12}, {q: "64 + 29", a: 93}], reward: 67 },
+            { level: 5, questions: [{q: "5 × 7", a: 35}, {q: "127 - 58", a: 69}, {q: "6 × 8", a: 48}], reward: 74 },
+            { level: 6, questions: [{q: "144 ÷ 12", a: 12}, {q: "9 × 9", a: 81}, {q: "234 + 178", a: 412}], reward: 81 },
+            { level: 7, questions: [{q: "15 × 8", a: 120}, {q: "196 ÷ 14", a: 14}, {q: "450 - 267", a: 183}], reward: 89 },
+            { level: 8, questions: [{q: "√16", a: 4}, {q: "12 × 11", a: 132}, {q: "720 ÷ 18", a: 40}], reward: 98 },
+            { level: 9, questions: [{q: "25 × 12", a: 300}, {q: "√81", a: 9}, {q: "1000 - 347", a: 653}], reward: 108 },
+            { level: 10, questions: [{q: "432 ÷ 16", a: 27}, {q: "45 × 22", a: 990}, {q: "√144", a: 12}], reward: 119 },
+            { level: 11, questions: [{q: "√225", a: 15}, {q: "1500 - 847", a: 653}, {q: "63 × 14", a: 882}], reward: 131 },
+            { level: 12, questions: [{q: "2400 ÷ 48", a: 50}, {q: "√169", a: 13}, {q: "3456 + 2789", a: 6245}], reward: 144 },
+            { level: 13, questions: [{q: "89 × 37", a: 3293}, {q: "5000 - 2847", a: 2153}, {q: "√256", a: 16}], reward: 158 },
+            { level: 14, questions: [{q: "√361", a: 19}, {q: "3600 ÷ 72", a: 50}, {q: "456 × 23", a: 10488}], reward: 174 },
+            { level: 15, questions: [{q: "125 × 88", a: 11000}, {q: "√400", a: 20}, {q: "9876 - 5432", a: 4444}], reward: 191 },
+            { level: 16, questions: [{q: "7200 ÷ 144", a: 50}, {q: "234 × 56", a: 13104}, {q: "√529", a: 23}], reward: 210 },
+            { level: 17, questions: [{q: "√625", a: 25}, {q: "15000 - 8763", a: 6237}, {q: "789 × 45", a: 35505}], reward: 231 },
+            { level: 18, questions: [{q: "456 × 123", a: 56088}, {q: "√729", a: 27}, {q: "28800 ÷ 360", a: 80}], reward: 254 },
+            { level: 19, questions: [{q: "√841", a: 29}, {q: "50000 - 27845", a: 22155}, {q: "1234 × 56", a: 69104}], reward: 279 },
+            { level: 20, questions: [{q: "98765 ÷ 235", a: 420}, {q: "999 × 111", a: 110889}, {q: "√961", a: 31}], reward: 307 },
+            { level: 21, questions: [{q: "√1024", a: 32}, {q: "123456 - 67890", a: 55566}, {q: "4567 × 89", a: 406463}], reward: 338 },
+            { level: 22, questions: [{q: "5678 × 234", a: 1328652}, {q: "√1225", a: 35}, {q: "750000 ÷ 1500", a: 500}], reward: 372 },
+            { level: 23, questions: [{q: "√1369", a: 37}, {q: "999999 - 456789", a: 543210}, {q: "8901 × 234", a: 2082834}], reward: 409 },
+            { level: 24, questions: [{q: "12345 × 678", a: 8369910}, {q: "√1521", a: 39}, {q: "9876543 ÷ 321", a: 30767}], reward: 450 },
+            { level: 25, questions: [{q: "√1681", a: 41}, {q: "5000000 - 2345678", a: 2654322}, {q: "99999 × 11", a: 1099989}], reward: 495 }
         ];
 
         var currentMathLevel = 0;
@@ -2366,30 +2455,30 @@
         // البيانات الخاصة بلعبة اللغة العربية - 25 مرحلة
         var arabicLevels = [
             { level: 1, questions: [{q: "ما مرادف كلمة 'سعيد'؟", a: ["فرح", "مسرور", "فرحان", "مبتهج"]}, {q: "ما مرادف كلمة 'كبير'؟", a: ["ضخم", "عظيم", "هائل"]}, {q: "ما مرادف كلمة 'جميل'؟", a: ["حسن", "وسيم", "بهي", "جذاب", "رائع"]}], reward: 50 },
-            { level: 2, questions: [{q: "ما ضد كلمة 'نظيف'؟", a: ["قذر", "وسخ", "متسخ"]}, {q: "ما ضد كلمة 'ساخن'؟", a: ["بارد", "مثلج"]}, {q: "ما ضد كلمة 'طويل'؟", a: ["قصير"]}], reward: 75 },
-            { level: 3, questions: [{q: "الفعل المضارع من 'كتب'؟", a: ["يكتب"]}, {q: "الفعل الماضي من 'يلعب'؟", a: ["لعب"]}, {q: "فعل الأمر من 'قرأ'؟", a: ["اقرأ", "إقرأ"]}], reward: 112 },
-            { level: 4, questions: [{q: "جمع كلمة 'كتاب'؟", a: ["كتب"]}, {q: "مفرد كلمة 'معلمون'؟", a: ["معلم"]}, {q: "جمع كلمة 'قلم'؟", a: ["أقلام", "اقلام"]}], reward: 168 },
-            { level: 5, questions: [{q: "ما نوع الجملة 'العلم نور'؟", a: ["اسمية", "اسميه"]}, {q: "الفاعل في 'كتب الطالب'؟", a: ["الطالب", "طالب"]}, {q: "ما ضد 'قوي'؟", a: ["ضعيف"]}], reward: 252 },
-            { level: 6, questions: [{q: "المفعول به في 'قرأ أحمد الكتاب'؟", a: ["الكتاب", "كتاب"]}, {q: "ما نوع الجملة 'يشرق القمر'؟", a: ["فعلية", "فعليه"]}, {q: "جمع 'باب'؟", a: ["أبواب", "ابواب"]}], reward: 378 },
-            { level: 7, questions: [{q: "تاء مربوطة أم مفتوحة: 'مدرس...'؟", a: ["ة", "مربوطة", "مربوطه"]}, {q: "مرادف 'شجاع'؟", a: ["جريء", "جرئ", "بطل", "شهم"]}, {q: "الفعل المضارع من 'ذهب'؟", a: ["يذهب"]}], reward: 567 },
-            { level: 8, questions: [{q: "همزة قطع أم وصل: '...كل'؟", a: ["أ", "قطع"]}, {q: "إعراب 'محمدٌ' في 'محمدٌ مجتهدٌ'؟", a: ["مبتدأ", "مبتدا"]}, {q: "تنوين في 'كتاب...' (ضم)؟", a: ["ٌ", "ضم", "ضمة", "تنوين", "تنوين ضم"]}], reward: 850 },
-            { level: 9, questions: [{q: "إعراب 'مجتهدٌ' في 'محمدٌ مجتهدٌ'؟", a: ["خبر"]}, {q: "ضد 'كثير'؟", a: ["قليل"]}, {q: "جمع 'رجل'؟", a: ["رجال"]}], reward: 1275 },
-            { level: 10, questions: [{q: "ضمير المتكلم؟", a: ["أنا", "انا"]}, {q: "مرادف 'حزين'؟", a: ["كئيب", "كئب", "محزون", "مهموم"]}, {q: "إعراب 'الكتاب' في 'قرأت الكتاب'؟", a: ["مفعول", "مفعولبه", "مفعول به"]}], reward: 1912 },
-            { level: 11, questions: [{q: "الأسماء الخمسة من 'أب'؟", a: ["أبو", "ابو"]}, {q: "ضد 'نهار'؟", a: ["ليل"]}, {q: "الفعل الماضي من 'يكتب'؟", a: ["كتب"]}], reward: 2868 },
-            { level: 12, questions: [{q: "جمع المذكر السالم من 'مسلم'؟", a: ["مسلمون", "مسلمين"]}, {q: "مرادف 'سريع'؟", a: ["مسرع", "عاجل"]}, {q: "الحال في 'جاء الطالب مسرعاً'؟", a: ["مسرعا", "مسرعاً"]}], reward: 4302 },
-            { level: 13, questions: [{q: "جمع المؤنث السالم من 'معلمة'؟", a: ["معلمات"]}, {q: "ضد 'جديد'؟", a: ["قديم", "عتيق"]}, {q: "أسلوب الأمر من 'كتب'؟", a: ["اكتب", "أكتب"]}], reward: 6453 },
-            { level: 14, questions: [{q: "التمييز في 'اشتريت لتراً حليباً'؟", a: ["حليبا", "حليباً"]}, {q: "مرادف 'غني'؟", a: ["ثري", "ثراء", "موسر"]}, {q: "الفعل المضارع من 'سار'؟", a: ["يسير"]}], reward: 9679 },
-            { level: 15, questions: [{q: "النعت في 'الطالب المجتهد'؟", a: ["المجتهد", "مجتهد"]}, {q: "ضد 'صادق'؟", a: ["كاذب"]}, {q: "أسلوب النهي من 'لعب'؟", a: ["لاتلعب", "لا تلعب"]}], reward: 14518 },
-            { level: 16, questions: [{q: "ضمير المخاطب المفرد المذكر؟", a: ["أنت", "انت"]}, {q: "مرادف 'عالم'؟", a: ["مثقف", "متعلم", "دارس"]}, {q: "جمع 'مسجد'؟", a: ["مساجد"]}], reward: 21777 },
-            { level: 17, questions: [{q: "أسلوب الاستفهام بـ؟", a: ["هل", "ما", "من", "أين", "متى"]}, {q: "ضد 'بعيد'؟", a: ["قريب"]}, {q: "الفعل الماضي من 'يأكل'؟", a: ["أكل", "اكل"]}], reward: 32665 },
-            { level: 18, questions: [{q: "ضمير الغائب المفرد المذكر؟", a: ["هو"]}, {q: "مرادف 'قوي'؟", a: ["شديد", "صلب", "متين"]}, {q: "فعل الأمر من 'درس'؟", a: ["ادرس", "أدرس"]}], reward: 48997 },
-            { level: 19, questions: [{q: "المبني للمجهول من 'كتب الطالب'؟", a: ["كُتِب", "كُتب", "كتب"]}, {q: "ضد 'ظلم'؟", a: ["عدل"]}, {q: "جمع 'مدينة'؟", a: ["مدن"]}], reward: 73495 },
-            { level: 20, questions: [{q: "اسم الفاعل من 'كتب'؟", a: ["كاتب"]}, {q: "مرادف 'فخور'؟", a: ["معتز", "مزهو"]}, {q: "ضد 'أمين'؟", a: ["خائن"]}], reward: 110242 },
-            { level: 21, questions: [{q: "اسم المفعول من 'كتب'؟", a: ["مكتوب"]}, {q: "جمع 'امرأة'؟", a: ["نساء"]}, {q: "مرادف 'ذكي'؟", a: ["نابه", "فطن", "لماح"]}], reward: 165363 },
-            { level: 22, questions: [{q: "ضد 'شر'؟", a: ["خير"]}, {q: "اسم الفاعل من 'علم'؟", a: ["عالم"]}, {q: "جمع 'سماء'؟", a: ["سماوات"]}], reward: 248044 },
-            { level: 23, questions: [{q: "مرادف 'صبور'؟", a: ["محتسب", "متحمل"]}, {q: "اسم المفعول من 'علم'؟", a: ["معلوم"]}, {q: "ضد 'فرح'؟", a: ["حزن", "كآبة"]}], reward: 372066 },
-            { level: 24, questions: [{q: "جمع 'نبي'؟", a: ["أنبياء", "انبياء"]}, {q: "مرادف 'كريم'؟", a: ["سخي", "جواد", "معطاء"]}, {q: "الفعل المضارع من 'باع'؟", a: ["يبيع"]}], reward: 558099 },
-            { level: 25, questions: [{q: "ضد 'حب'؟", a: ["كره", "بغض"]}, {q: "أسلوب النداء بـ؟", a: ["يا", "أيا", "أي", "هيا"]}, {q: "مرادف 'حكيم'؟", a: ["عاقل", "رشيد", "لبيب"]}], reward: 837148 }
+            { level: 2, questions: [{q: "ما ضد كلمة 'نظيف'؟", a: ["قذر", "وسخ", "متسخ"]}, {q: "ما ضد كلمة 'ساخن'؟", a: ["بارد", "مثلج"]}, {q: "ما ضد كلمة 'طويل'؟", a: ["قصير"]}], reward: 55 },
+            { level: 3, questions: [{q: "الفعل المضارع من 'كتب'؟", a: ["يكتب"]}, {q: "الفعل الماضي من 'يلعب'؟", a: ["لعب"]}, {q: "فعل الأمر من 'قرأ'؟", a: ["اقرأ", "إقرأ"]}], reward: 61 },
+            { level: 4, questions: [{q: "جمع كلمة 'كتاب'؟", a: ["كتب"]}, {q: "مفرد كلمة 'معلمون'؟", a: ["معلم"]}, {q: "جمع كلمة 'قلم'؟", a: ["أقلام", "اقلام"]}], reward: 67 },
+            { level: 5, questions: [{q: "ما نوع الجملة 'العلم نور'؟", a: ["اسمية", "اسميه"]}, {q: "الفاعل في 'كتب الطالب'؟", a: ["الطالب", "طالب"]}, {q: "ما ضد 'قوي'؟", a: ["ضعيف"]}], reward: 74 },
+            { level: 6, questions: [{q: "المفعول به في 'قرأ أحمد الكتاب'؟", a: ["الكتاب", "كتاب"]}, {q: "ما نوع الجملة 'يشرق القمر'؟", a: ["فعلية", "فعليه"]}, {q: "جمع 'باب'؟", a: ["أبواب", "ابواب"]}], reward: 81 },
+            { level: 7, questions: [{q: "تاء مربوطة أم مفتوحة: 'مدرس...'؟", a: ["ة", "مربوطة", "مربوطه"]}, {q: "مرادف 'شجاع'؟", a: ["جريء", "جرئ", "بطل", "شهم"]}, {q: "الفعل المضارع من 'ذهب'؟", a: ["يذهب"]}], reward: 89 },
+            { level: 8, questions: [{q: "همزة قطع أم وصل: '...كل'؟", a: ["أ", "قطع"]}, {q: "إعراب 'محمدٌ' في 'محمدٌ مجتهدٌ'؟", a: ["مبتدأ", "مبتدا"]}, {q: "تنوين في 'كتاب...' (ضم)؟", a: ["ٌ", "ضم", "ضمة", "تنوين", "تنوين ضم"]}], reward: 98 },
+            { level: 9, questions: [{q: "إعراب 'مجتهدٌ' في 'محمدٌ مجتهدٌ'؟", a: ["خبر"]}, {q: "ضد 'كثير'؟", a: ["قليل"]}, {q: "جمع 'رجل'؟", a: ["رجال"]}], reward: 108 },
+            { level: 10, questions: [{q: "ضمير المتكلم؟", a: ["أنا", "انا"]}, {q: "مرادف 'حزين'؟", a: ["كئيب", "كئب", "محزون", "مهموم"]}, {q: "إعراب 'الكتاب' في 'قرأت الكتاب'؟", a: ["مفعول", "مفعولبه", "مفعول به"]}], reward: 119 },
+            { level: 11, questions: [{q: "الأسماء الخمسة من 'أب'؟", a: ["أبو", "ابو"]}, {q: "ضد 'نهار'؟", a: ["ليل"]}, {q: "الفعل الماضي من 'يكتب'؟", a: ["كتب"]}], reward: 131 },
+            { level: 12, questions: [{q: "جمع المذكر السالم من 'مسلم'؟", a: ["مسلمون", "مسلمين"]}, {q: "مرادف 'سريع'؟", a: ["مسرع", "عاجل"]}, {q: "الحال في 'جاء الطالب مسرعاً'؟", a: ["مسرعا", "مسرعاً"]}], reward: 144 },
+            { level: 13, questions: [{q: "جمع المؤنث السالم من 'معلمة'؟", a: ["معلمات"]}, {q: "ضد 'جديد'؟", a: ["قديم", "عتيق"]}, {q: "أسلوب الأمر من 'كتب'؟", a: ["اكتب", "أكتب"]}], reward: 158 },
+            { level: 14, questions: [{q: "التمييز في 'اشتريت لتراً حليباً'؟", a: ["حليبا", "حليباً"]}, {q: "مرادف 'غني'؟", a: ["ثري", "ثراء", "موسر"]}, {q: "الفعل المضارع من 'سار'؟", a: ["يسير"]}], reward: 174 },
+            { level: 15, questions: [{q: "النعت في 'الطالب المجتهد'؟", a: ["المجتهد", "مجتهد"]}, {q: "ضد 'صادق'؟", a: ["كاذب"]}, {q: "أسلوب النهي من 'لعب'؟", a: ["لاتلعب", "لا تلعب"]}], reward: 191 },
+            { level: 16, questions: [{q: "ضمير المخاطب المفرد المذكر؟", a: ["أنت", "انت"]}, {q: "مرادف 'عالم'؟", a: ["مثقف", "متعلم", "دارس"]}, {q: "جمع 'مسجد'؟", a: ["مساجد"]}], reward: 210 },
+            { level: 17, questions: [{q: "أسلوب الاستفهام بـ؟", a: ["هل", "ما", "من", "أين", "متى"]}, {q: "ضد 'بعيد'؟", a: ["قريب"]}, {q: "الفعل الماضي من 'يأكل'؟", a: ["أكل", "اكل"]}], reward: 231 },
+            { level: 18, questions: [{q: "ضمير الغائب المفرد المذكر؟", a: ["هو"]}, {q: "مرادف 'قوي'؟", a: ["شديد", "صلب", "متين"]}, {q: "فعل الأمر من 'درس'؟", a: ["ادرس", "أدرس"]}], reward: 254 },
+            { level: 19, questions: [{q: "المبني للمجهول من 'كتب الطالب'؟", a: ["كُتِب", "كُتب", "كتب"]}, {q: "ضد 'ظلم'؟", a: ["عدل"]}, {q: "جمع 'مدينة'؟", a: ["مدن"]}], reward: 279 },
+            { level: 20, questions: [{q: "اسم الفاعل من 'كتب'؟", a: ["كاتب"]}, {q: "مرادف 'فخور'؟", a: ["معتز", "مزهو"]}, {q: "ضد 'أمين'؟", a: ["خائن"]}], reward: 307 },
+            { level: 21, questions: [{q: "اسم المفعول من 'كتب'؟", a: ["مكتوب"]}, {q: "جمع 'امرأة'؟", a: ["نساء"]}, {q: "مرادف 'ذكي'؟", a: ["نابه", "فطن", "لماح"]}], reward: 338 },
+            { level: 22, questions: [{q: "ضد 'شر'؟", a: ["خير"]}, {q: "اسم الفاعل من 'علم'؟", a: ["عالم"]}, {q: "جمع 'سماء'؟", a: ["سماوات"]}], reward: 372 },
+            { level: 23, questions: [{q: "مرادف 'صبور'؟", a: ["محتسب", "متحمل"]}, {q: "اسم المفعول من 'علم'؟", a: ["معلوم"]}, {q: "ضد 'فرح'؟", a: ["حزن", "كآبة"]}], reward: 409 },
+            { level: 24, questions: [{q: "جمع 'نبي'؟", a: ["أنبياء", "انبياء"]}, {q: "مرادف 'كريم'؟", a: ["سخي", "جواد", "معطاء"]}, {q: "الفعل المضارع من 'باع'؟", a: ["يبيع"]}], reward: 450 },
+            { level: 25, questions: [{q: "ضد 'حب'؟", a: ["كره", "بغض"]}, {q: "أسلوب النداء بـ؟", a: ["يا", "أيا", "أي", "هيا"]}, {q: "مرادف 'حكيم'؟", a: ["عاقل", "رشيد", "لبيب"]}], reward: 495 }
         ];
 
         // دالة لاسترجاع القلوب تلقائياً
@@ -2926,11 +3015,13 @@
         var snakeDirection = 'right';
         var snakeFood = {};
         var snakeScore = 0;
+        var snakeGold = 0;
         var snakeInterval = null;
         var snakeRunning = false;
 
         function showSnakeGame() {
-            document.getElementById('gamesPage').style.display = 'none';
+            currentUsername = getCurrentUsername();
+            document.getElementById('gamesMenuPage').style.display = 'none';
             document.getElementById('snakeGamePage').style.display = 'block';
             
             snakeCanvas = document.getElementById('snakeCanvas');
@@ -2943,7 +3034,20 @@
             if (snakeInterval) clearInterval(snakeInterval);
             snakeRunning = false;
             document.getElementById('snakeGamePage').style.display = 'none';
-            document.getElementById('gamesPage').style.display = 'block';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+        }
+
+        // دالة لعرض قائمة اختيار الألعاب من لوحة التحكم مباشرة
+        function showGamesMenuFromDashboard() {
+            document.getElementById('welcomePage').style.display = 'none';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+            displayGlobalHearts();
+        }
+
+        function backToGamesFromMenu() {
+            document.getElementById('gamesMenuPage').style.display = 'none';
+            document.getElementById('welcomePage').style.display = 'block';
+            stopHeartTimer();
         }
 
         function startSnakeGame() {
@@ -2952,6 +3056,7 @@
             snake = [{x: 6 * snakeBox, y: 6 * snakeBox}];
             snakeDirection = 'right';
             snakeScore = 0;
+            snakeGold = 0;
             document.getElementById('snakeScore').textContent = snakeScore;
             placeSnakeFood();
             snakeRunning = true;
@@ -3008,6 +3113,7 @@
             // أكل الطعام
             if (head.x === snakeFood.x && head.y === snakeFood.y) {
                 snakeScore++;
+                snakeGold += 3;
                 document.getElementById('snakeScore').textContent = snakeScore;
                 placeSnakeFood();
             } else {
@@ -3018,31 +3124,453 @@
         }
 
         function drawSnake() {
-            snakeCtx.fillStyle = '#1a1a2e';
+            // خلفية متدرجة
+            var bgGradient = snakeCtx.createLinearGradient(0, 0, 300, 300);
+            bgGradient.addColorStop(0, '#1a1a2e');
+            bgGradient.addColorStop(1, '#16213e');
+            snakeCtx.fillStyle = bgGradient;
             snakeCtx.fillRect(0, 0, 300, 300);
             
-            // رسم الثعبان
-            for (var i = 0; i < snake.length; i++) {
-                snakeCtx.fillStyle = i === 0 ? '#ffd700' : '#667eea';
-                snakeCtx.fillRect(snake[i].x, snake[i].y, snakeBox - 2, snakeBox - 2);
+            // خطوط شبكة خفيفة
+            snakeCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            for (var g = 0; g < 300; g += snakeBox) {
+                snakeCtx.beginPath();
+                snakeCtx.moveTo(g, 0);
+                snakeCtx.lineTo(g, 300);
+                snakeCtx.stroke();
+                snakeCtx.beginPath();
+                snakeCtx.moveTo(0, g);
+                snakeCtx.lineTo(300, g);
+                snakeCtx.stroke();
             }
             
-            // رسم الطعام
-            snakeCtx.fillStyle = '#ff4444';
-            snakeCtx.fillRect(snakeFood.x, snakeFood.y, snakeBox - 2, snakeBox - 2);
+            // رسم الثعبان بأطراف دائرية
+            for (var i = 0; i < snake.length; i++) {
+                var color = i === 0 ? '#ffd700' : (i % 2 === 0 ? '#667eea' : '#764ba2');
+                drawRoundedRect(snakeCtx, snake[i].x + 1, snake[i].y + 1, snakeBox - 2, snakeBox - 2, 5, color);
+                
+                if (i === 0) {
+                    // عيون الرأس
+                    snakeCtx.fillStyle = '#333';
+                    snakeCtx.beginPath();
+                    snakeCtx.arc(snake[i].x + 4, snake[i].y + 4, 1.5, 0, Math.PI * 2);
+                    snakeCtx.arc(snake[i].x + snakeBox - 5, snake[i].y + 4, 1.5, 0, Math.PI * 2);
+                    snakeCtx.fill();
+                }
+            }
+            
+            // رسم الطعام كدائرة متوهجة
+            var foodGradient = snakeCtx.createRadialGradient(
+                snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, 1,
+                snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox/1.5
+            );
+            foodGradient.addColorStop(0, '#ff8a8a');
+            foodGradient.addColorStop(1, '#ff4444');
+            snakeCtx.fillStyle = foodGradient;
+            snakeCtx.beginPath();
+            snakeCtx.arc(snakeFood.x + snakeBox/2, snakeFood.y + snakeBox/2, snakeBox/2 - 1, 0, Math.PI * 2);
+            snakeCtx.fill();
+        }
+
+        // دالة مساعدة لرسم مستطيل بحواف دائرية
+        function drawRoundedRect(ctx, x, y, w, h, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+            ctx.fill();
         }
 
         function snakeGameOver() {
             clearInterval(snakeInterval);
             snakeRunning = false;
+            
+            // إضافة الذهب المكتسب للحساب
+            saveEarnedGold(snakeGold);
+            
             snakeCtx.fillStyle = 'rgba(0,0,0,0.7)';
             snakeCtx.fillRect(0, 0, 300, 300);
             snakeCtx.fillStyle = '#fff';
             snakeCtx.font = 'bold 20px Arial';
             snakeCtx.textAlign = 'center';
-            snakeCtx.fillText('💔 انتهت اللعبة!', 150, 140);
+            snakeCtx.fillText('💔 انتهت اللعبة!', 150, 130);
             snakeCtx.font = '16px Arial';
-            snakeCtx.fillText('النقاط: ' + snakeScore, 150, 170);
+            snakeCtx.fillText('النقاط: ' + snakeScore, 150, 160);
+            snakeCtx.fillText('🪙 ذهب مكتسب: ' + snakeGold, 150, 185);
+        }
+
+        // دالة عامة لإضافة الذهب المكتسب لحساب المستخدم الحالي
+        function saveEarnedGold(amount) {
+            if (amount <= 0) return;
+            
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === currentUsername) {
+                    if (!accounts[i].gold) accounts[i].gold = 0;
+                    accounts[i].gold += amount;
+                    
+                    db.collection('accounts').doc(currentUsername).set(accounts[i]).catch(function(error) {
+                        console.error('خطأ في حفظ الذهب:', error);
+                    });
+                    break;
+                }
+            }
+        }
+
+        // ===== لعبة السيارات =====
+        var carCanvas, carCtx;
+        var carPlayer = {x: 134, y: 220, w: 32, h: 52};
+        var carEnemies = [];
+        var carScore = 0;
+        var carGold = 0;
+        var carInterval = null;
+        var carRunning = false;
+        var carStep = 15;
+        var carSpawnTimer = 0;
+        var carRoadOffset = 0;
+
+        function showCarGame() {
+            currentUsername = getCurrentUsername();
+            document.getElementById('gamesMenuPage').style.display = 'none';
+            document.getElementById('carGamePage').style.display = 'block';
+            
+            carCanvas = document.getElementById('carCanvas');
+            carCtx = carCanvas.getContext('2d');
+            
+            startCarGame();
+        }
+
+        function backToGamesMenuFromCar() {
+            if (carInterval) clearInterval(carInterval);
+            carRunning = false;
+            document.getElementById('carGamePage').style.display = 'none';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+        }
+
+        function startCarGame() {
+            if (carInterval) clearInterval(carInterval);
+            
+            carPlayer = {x: 127, y: 220, w: 45, h: 45};
+            carEnemies = [];
+            carScore = 0;
+            carGold = 0;
+            carSpawnTimer = 0;
+            document.getElementById('carScore').textContent = carScore;
+            carRunning = true;
+            
+            carInterval = setInterval(carGameLoop, 30);
+        }
+
+        function carMove(dir) {
+            if (!carRunning) return;
+            
+            if (dir === 'up') carPlayer.y -= carStep;
+            else if (dir === 'down') carPlayer.y += carStep;
+            else if (dir === 'left') carPlayer.x -= carStep;
+            else if (dir === 'right') carPlayer.x += carStep;
+            
+            // تقييد حركة السيارة داخل الشاشة
+            carPlayer.x = Math.max(0, Math.min(300 - carPlayer.w, carPlayer.x));
+            carPlayer.y = Math.max(0, Math.min(300 - carPlayer.h, carPlayer.y));
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!carRunning) return;
+            if (e.key === 'ArrowUp') carMove('up');
+            else if (e.key === 'ArrowDown') carMove('down');
+            else if (e.key === 'ArrowLeft') carMove('left');
+            else if (e.key === 'ArrowRight') carMove('right');
+        });
+
+        function carGameLoop() {
+            // السرعة تزداد 20% كل 10 نقاط
+            var currentSpeed = 5 * Math.pow(1.2, Math.floor(carScore / 10));
+            carRoadOffset += currentSpeed;
+            
+            carSpawnTimer++;
+            if (carSpawnTimer > 45) {
+                carSpawnTimer = 0;
+                carEnemies.push({
+                    x: Math.floor(Math.random() * 4) * 75 + 10,
+                    y: -60,
+                    w: 55,
+                    h: 55,
+                    passed: false
+                });
+            }
+            
+            for (var i = carEnemies.length - 1; i >= 0; i--) {
+                carEnemies[i].y += currentSpeed;
+                
+                // فحص التصادم مع سيارة اللاعب
+                if (carEnemies[i].x < carPlayer.x + carPlayer.w &&
+                    carEnemies[i].x + carEnemies[i].w > carPlayer.x &&
+                    carEnemies[i].y < carPlayer.y + carPlayer.h &&
+                    carEnemies[i].y + carEnemies[i].h > carPlayer.y) {
+                    carGameOver();
+                    return;
+                }
+                
+                // إضافة نقطة عند تجاوز سيارة بأمان
+                if (!carEnemies[i].passed && carEnemies[i].y > carPlayer.y + carPlayer.h) {
+                    carEnemies[i].passed = true;
+                    carScore++;
+                    carGold += 1;
+                    document.getElementById('carScore').textContent = carScore;
+                }
+                
+                // إزالة السيارات التي خرجت من الشاشة
+                if (carEnemies[i].y > 320) {
+                    carEnemies.splice(i, 1);
+                }
+            }
+            
+            drawCarGame();
+        }
+
+        function drawCarGame() {
+            // خلفية الطريق متدرجة
+            var roadGradient = carCtx.createLinearGradient(0, 0, 0, 300);
+            roadGradient.addColorStop(0, '#3a3f4b');
+            roadGradient.addColorStop(1, '#2d3038');
+            carCtx.fillStyle = roadGradient;
+            carCtx.fillRect(0, 0, 300, 300);
+            
+            // أرصفة جانبية بخطوط تحذيرية
+            carCtx.fillStyle = '#5a6270';
+            carCtx.fillRect(0, 0, 8, 300);
+            carCtx.fillRect(292, 0, 8, 300);
+            carCtx.fillStyle = '#ffd700';
+            var dashOffset = carRoadOffset % 20;
+            for (var d = -20; d < 320; d += 20) {
+                carCtx.fillRect(2, d + dashOffset, 4, 10);
+                carCtx.fillRect(294, d + dashOffset, 4, 10);
+            }
+            
+            // خطوط الطريق المتحركة (إحساس بالسرعة)
+            carCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+            carCtx.lineWidth = 3;
+            carCtx.setLineDash([16, 16]);
+            carCtx.lineDashOffset = -(carRoadOffset % 32);
+            for (var x = 75; x < 300; x += 75) {
+                carCtx.beginPath();
+                carCtx.moveTo(x, 0);
+                carCtx.lineTo(x, 300);
+                carCtx.stroke();
+            }
+            carCtx.setLineDash([]);
+            carCtx.lineDashOffset = 0;
+            
+            // رسم سيارة اللاعب (مع نوافذ وظل وأضواء)
+            drawCarShape(carCtx, carPlayer.x, carPlayer.y, carPlayer.w, carPlayer.h, '#ffd700', '#2a2a3a', true);
+            
+            // رسم السيارات القادمة بألوان متنوعة
+            var enemyColors = ['#ff4444', '#4da6ff', '#66d966', '#ff8c42', '#c77dff'];
+            for (var i = 0; i < carEnemies.length; i++) {
+                var color = enemyColors[i % enemyColors.length];
+                drawCarShape(carCtx, carEnemies[i].x, carEnemies[i].y, carEnemies[i].w, carEnemies[i].h, color, '#1a1a1a', false);
+            }
+        }
+
+        // دالة مساعدة لرسم شكل سيارة بالتفاصيل
+        function drawCarShape(ctx, x, y, w, h, bodyColor, windowColor, isPlayer) {
+            // ظل خفيف
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            drawRoundedRectPath(ctx, x + 2, y + 4, w, h, 6);
+            ctx.fill();
+            
+            // تدرج لوني على جسم السيارة (لمعان معدني)
+            var carGradient = ctx.createLinearGradient(x, y, x + w, y);
+            carGradient.addColorStop(0, bodyColor);
+            carGradient.addColorStop(0.5, '#ffffff55');
+            carGradient.addColorStop(1, bodyColor);
+            ctx.fillStyle = carGradient;
+            drawRoundedRectPath(ctx, x, y, w, h, 7);
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+            ctx.lineWidth = 1;
+            drawRoundedRectPath(ctx, x, y, w, h, 7);
+            ctx.stroke();
+            
+            // خط سباق جانبي
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillRect(x + w / 2 - 1.5, y + 4, 3, h - 8);
+            
+            // النوافذ (زجاج أمامي وخلفي)
+            ctx.fillStyle = windowColor;
+            var winW = w * 0.62;
+            drawRoundedRectPath(ctx, x + (w - winW) / 2, y + h * 0.12, winW, h * 0.22, 3);
+            ctx.fill();
+            drawRoundedRectPath(ctx, x + (w - winW) / 2, y + h * 0.62, winW, h * 0.2, 3);
+            ctx.fill();
+            
+            // لمعان على الزجاج الأمامي
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x + (w - winW) / 2 + 2, y + h * 0.12 + 2);
+            ctx.lineTo(x + (w - winW) / 2 + winW - 2, y + h * 0.12 + 2);
+            ctx.stroke();
+            
+            // مرايا جانبية
+            ctx.fillStyle = bodyColor;
+            ctx.fillRect(x - 3, y + h * 0.22, 3, 5);
+            ctx.fillRect(x + w, y + h * 0.22, 3, 5);
+            
+            // الأضواء الأمامية والخلفية
+            if (isPlayer) {
+                ctx.fillStyle = '#fffab3';
+                ctx.shadowColor = '#ffe066';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(x + 5, y + 3, 2.2, 0, Math.PI * 2);
+                ctx.arc(x + w - 5, y + 3, 2.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                ctx.fillStyle = '#ff4d4d';
+                ctx.beginPath();
+                ctx.arc(x + 5, y + h - 3, 1.8, 0, Math.PI * 2);
+                ctx.arc(x + w - 5, y + h - 3, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#ff4d4d';
+                ctx.shadowColor = '#ff4d4d';
+                ctx.shadowBlur = 3;
+                ctx.beginPath();
+                ctx.arc(x + 5, y + 3, 2, 0, Math.PI * 2);
+                ctx.arc(x + w - 5, y + 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            // الإطارات (نقاط سوداء صغيرة)
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.arc(x + 3, y + 3, 2, 0, Math.PI * 2);
+            ctx.arc(x + w - 3, y + 3, 2, 0, Math.PI * 2);
+            ctx.arc(x + 3, y + h - 3, 2, 0, Math.PI * 2);
+            ctx.arc(x + w - 3, y + h - 3, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // دالة مساعدة لرسم مسار مستطيل بحواف دائرية (بدون تلوين تلقائي)
+        function drawRoundedRectPath(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function carGameOver() {
+            clearInterval(carInterval);
+            carRunning = false;
+            
+            // إضافة الذهب المكتسب للحساب
+            saveEarnedGold(carGold);
+            
+            carCtx.fillStyle = 'rgba(0,0,0,0.7)';
+            carCtx.fillRect(0, 0, 300, 300);
+            carCtx.fillStyle = '#fff';
+            carCtx.font = 'bold 20px Arial';
+            carCtx.textAlign = 'center';
+            carCtx.fillText('💔 انتهت اللعبة!', 150, 130);
+            carCtx.font = '16px Arial';
+            carCtx.fillText('النقاط: ' + carScore, 150, 160);
+            carCtx.fillText('🪙 ذهب مكتسب: ' + carGold, 150, 185);
+        }
+
+        // ===== المتجر =====
+        function showStore() {
+            currentUsername = getCurrentUsername();
+            document.getElementById('gamesMenuPage').style.display = 'none';
+            document.getElementById('storePage').style.display = 'block';
+            updateStoreGoldDisplay();
+        }
+
+        function backToGamesFromStore() {
+            document.getElementById('storePage').style.display = 'none';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+        }
+
+        function updateStoreGoldDisplay() {
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === currentUsername) {
+                    if (!accounts[i].gold) accounts[i].gold = 0;
+                    document.getElementById('storeGold').textContent = accounts[i].gold;
+                    break;
+                }
+            }
+        }
+
+        // دالة لاستبدال كمية معينة من الذهب بـ XP
+        function exchangeGold(goldAmount) {
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === currentUsername) {
+                    if (!accounts[i].gold) accounts[i].gold = 0;
+                    
+                    if (accounts[i].gold < goldAmount) {
+                        showStoreMessage('❌ لا تملك ذهباً كافياً!', 'error');
+                        return;
+                    }
+                    
+                    accounts[i].gold -= goldAmount;
+                    accounts[i].xp += goldAmount * 10;
+                    
+                    // التحقق من الليفل أب
+                    var levelsGained = 0;
+                    while (true) {
+                        var requiredXP = getRequiredXP(accounts[i].level);
+                        if (accounts[i].xp >= requiredXP) {
+                            accounts[i].xp -= requiredXP;
+                            accounts[i].level += 1;
+                            levelsGained++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    db.collection('accounts').doc(currentUsername).set(accounts[i]).then(function() {
+                        updateStoreGoldDisplay();
+                        var msg = '✅ تم استبدال ' + goldAmount + ' ذهب مقابل ' + (goldAmount * 10) + ' XP!';
+                        if (levelsGained > 0) msg += ' 🌟 وصلت للمستوى ' + accounts[i].level + '!';
+                        showStoreMessage(msg, 'success');
+                    }).catch(function(error) {
+                        console.error('خطأ في الاستبدال:', error);
+                        showStoreMessage('❌ فشل الاستبدال، حاول مرة أخرى', 'error');
+                    });
+                    break;
+                }
+            }
+        }
+
+        // دالة لاستبدال كل الذهب المتوفر دفعة واحدة
+        function exchangeAllGold() {
+            for (var i = 0; i < accounts.length; i++) {
+                if (accounts[i].username === currentUsername) {
+                    var allGold = accounts[i].gold || 0;
+                    if (allGold <= 0) {
+                        showStoreMessage('❌ لا تملك أي ذهب حالياً!', 'error');
+                        return;
+                    }
+                    exchangeGold(allGold);
+                    break;
+                }
+            }
+        }
+
+        function showStoreMessage(text, type) {
+            var msg = document.getElementById('storeMessage');
+            msg.textContent = text;
+            msg.className = 'result-message result-' + type;
+            msg.style.display = 'block';
         }
 
         // دالة لعرض لعبة الرياضيات
