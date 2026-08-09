@@ -1200,7 +1200,11 @@
                     <div class="edu-operation-icon">🚗</div>
                     <div class="game-title">لعبة السيارات</div>
                 </div>
-                <div class="edu-operation-card edu-center-card" onclick="showStore()">
+                <div class="edu-operation-card" onclick="showFlappyGame()">
+                    <div class="edu-operation-icon">🐦</div>
+                    <div class="game-title">لعبة الطائر</div>
+                </div>
+                <div class="edu-operation-card" onclick="showStore()">
                     <div class="edu-operation-icon">🏪</div>
                     <div class="game-title">المتجر</div>
                 </div>
@@ -1272,6 +1276,22 @@
                 </div>
                 
                 <button class="submit-answer-btn" style="margin-top:20px;" onclick="startCarGame()">🔄 بدء / إعادة اللعبة</button>
+            </div>
+        </div>
+
+        <!-- صفحة لعبة الطائر -->
+        <div id="flappyGamePage" class="snake-game-page">
+            <button class="back-button" onclick="backToGamesMenuFromFlappy()">← العودة</button>
+            
+            <h2 class="leaderboard-title">🐦 لعبة الطائر 🐦</h2>
+            
+            <div class="snake-container">
+                <div class="snake-score">النقاط: <span id="flappyScore">0</span></div>
+                <canvas id="flappyCanvas" width="300" height="300"></canvas>
+                
+                <button class="snake-btn" style="width:100%; height:55px; font-size:1.1em; margin-top:15px;" onclick="flappyJump()">⬆️ اضغط للقفز (أو Space)</button>
+                
+                <button class="submit-answer-btn" style="margin-top:15px;" onclick="startFlappyGame()">🔄 بدء / إعادة اللعبة</button>
             </div>
         </div>
 
@@ -3525,6 +3545,184 @@
             carCtx.font = '16px Arial';
             carCtx.fillText('النقاط: ' + carScore, 150, 160);
             carCtx.fillText('🪙 ذهب مكتسب: ' + carGold, 150, 185);
+        }
+
+        // ===== لعبة الطائر (Flappy Bird) =====
+        var flappyCanvas, flappyCtx;
+        var flappyBird = {x: 60, y: 150, w: 20, h: 20, velocity: 0};
+        var flappyGravity = 0.5;
+        var flappyJumpPower = -8;
+        var flappyPipes = [];
+        var flappyScore = 0;
+        var flappyGold = 0;
+        var flappyInterval = null;
+        var flappyRunning = false;
+        var flappyPipeGap = 115;
+        var flappyPipeWidth = 40;
+        var flappySpawnTimer = 0;
+
+        function showFlappyGame() {
+            currentUsername = getCurrentUsername();
+            document.getElementById('gamesMenuPage').style.display = 'none';
+            document.getElementById('flappyGamePage').style.display = 'block';
+            
+            flappyCanvas = document.getElementById('flappyCanvas');
+            flappyCtx = flappyCanvas.getContext('2d');
+            
+            // دعم اللمس والضغط بالماوس مباشرة على الشاشة
+            flappyCanvas.onclick = flappyJump;
+            flappyCanvas.ontouchstart = function(e) {
+                e.preventDefault();
+                flappyJump();
+            };
+            
+            startFlappyGame();
+        }
+
+        function backToGamesMenuFromFlappy() {
+            if (flappyInterval) clearInterval(flappyInterval);
+            flappyRunning = false;
+            document.getElementById('flappyGamePage').style.display = 'none';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+        }
+
+        function startFlappyGame() {
+            if (flappyInterval) clearInterval(flappyInterval);
+            
+            flappyBird = {x: 60, y: 150, w: 20, h: 20, velocity: 0};
+            flappyPipes = [];
+            flappyScore = 0;
+            flappyGold = 0;
+            flappySpawnTimer = 0;
+            document.getElementById('flappyScore').textContent = flappyScore;
+            flappyRunning = true;
+            
+            flappyInterval = setInterval(flappyGameLoop, 25);
+        }
+
+        function flappyJump() {
+            if (!flappyRunning) return;
+            flappyBird.velocity = flappyJumpPower;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && flappyRunning) {
+                e.preventDefault();
+                flappyJump();
+            }
+        });
+
+        function flappyGameLoop() {
+            flappyBird.velocity += flappyGravity;
+            flappyBird.y += flappyBird.velocity;
+            
+            // فحص التصادم مع الأرض أو السقف
+            if (flappyBird.y < 0 || flappyBird.y + flappyBird.h > 300) {
+                flappyGameOver();
+                return;
+            }
+            
+            // توليد أنابيب جديدة
+            flappySpawnTimer++;
+            if (flappySpawnTimer > 70) {
+                flappySpawnTimer = 0;
+                var gapY = Math.floor(Math.random() * 120) + 40;
+                flappyPipes.push({x: 300, gapY: gapY, passed: false});
+            }
+            
+            // تحريك الأنابيب وفحص التصادم
+            for (var i = flappyPipes.length - 1; i >= 0; i--) {
+                flappyPipes[i].x -= 3;
+                var p = flappyPipes[i];
+                
+                if (flappyBird.x + flappyBird.w > p.x && flappyBird.x < p.x + flappyPipeWidth) {
+                    if (flappyBird.y < p.gapY || flappyBird.y + flappyBird.h > p.gapY + flappyPipeGap) {
+                        flappyGameOver();
+                        return;
+                    }
+                }
+                
+                // تجاوز الأنبوب = ذهب ونقطة
+                if (!p.passed && p.x + flappyPipeWidth < flappyBird.x) {
+                    p.passed = true;
+                    flappyScore++;
+                    flappyGold += 2;
+                    document.getElementById('flappyScore').textContent = flappyScore;
+                }
+                
+                if (p.x < -flappyPipeWidth) {
+                    flappyPipes.splice(i, 1);
+                }
+            }
+            
+            drawFlappyGame();
+        }
+
+        function drawFlappyGame() {
+            var skyGradient = flappyCtx.createLinearGradient(0, 0, 0, 300);
+            skyGradient.addColorStop(0, '#70c5ce');
+            skyGradient.addColorStop(1, '#a8e6f0');
+            flappyCtx.fillStyle = skyGradient;
+            flappyCtx.fillRect(0, 0, 300, 300);
+            
+            // الأنابيب
+            for (var i = 0; i < flappyPipes.length; i++) {
+                var p = flappyPipes[i];
+                var pipeGradient = flappyCtx.createLinearGradient(p.x, 0, p.x + flappyPipeWidth, 0);
+                pipeGradient.addColorStop(0, '#4caf50');
+                pipeGradient.addColorStop(0.5, '#81c784');
+                pipeGradient.addColorStop(1, '#4caf50');
+                flappyCtx.fillStyle = pipeGradient;
+                
+                flappyCtx.fillRect(p.x, 0, flappyPipeWidth, p.gapY);
+                flappyCtx.fillRect(p.x - 3, p.gapY - 15, flappyPipeWidth + 6, 15);
+                
+                flappyCtx.fillRect(p.x, p.gapY + flappyPipeGap, flappyPipeWidth, 300 - (p.gapY + flappyPipeGap));
+                flappyCtx.fillRect(p.x - 3, p.gapY + flappyPipeGap, flappyPipeWidth + 6, 15);
+            }
+            
+            // الطائر
+            flappyCtx.save();
+            flappyCtx.translate(flappyBird.x + flappyBird.w / 2, flappyBird.y + flappyBird.h / 2);
+            var angle = Math.min(Math.max(flappyBird.velocity * 3, -25), 90);
+            flappyCtx.rotate(angle * Math.PI / 180);
+            
+            flappyCtx.fillStyle = '#ffd700';
+            flappyCtx.beginPath();
+            flappyCtx.arc(0, 0, flappyBird.w / 2, 0, Math.PI * 2);
+            flappyCtx.fill();
+            
+            flappyCtx.fillStyle = '#333';
+            flappyCtx.beginPath();
+            flappyCtx.arc(5, -3, 2, 0, Math.PI * 2);
+            flappyCtx.fill();
+            
+            flappyCtx.fillStyle = '#ff8c00';
+            flappyCtx.beginPath();
+            flappyCtx.moveTo(flappyBird.w / 2, 0);
+            flappyCtx.lineTo(flappyBird.w / 2 + 6, -2);
+            flappyCtx.lineTo(flappyBird.w / 2, 4);
+            flappyCtx.closePath();
+            flappyCtx.fill();
+            
+            flappyCtx.restore();
+        }
+
+        function flappyGameOver() {
+            clearInterval(flappyInterval);
+            flappyRunning = false;
+            
+            saveEarnedGold(flappyGold);
+            
+            flappyCtx.fillStyle = 'rgba(0,0,0,0.7)';
+            flappyCtx.fillRect(0, 0, 300, 300);
+            flappyCtx.fillStyle = '#fff';
+            flappyCtx.font = 'bold 20px Arial';
+            flappyCtx.textAlign = 'center';
+            flappyCtx.fillText('💔 انتهت اللعبة!', 150, 130);
+            flappyCtx.font = '16px Arial';
+            flappyCtx.fillText('النقاط: ' + flappyScore, 150, 160);
+            flappyCtx.fillText('🪙 ذهب مكتسب: ' + flappyGold, 150, 185);
         }
 
         // ===== المتجر =====
