@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول</title>
+    <title>Phantom Shadow</title>
+    <link rel="icon" href="favicon.png">
     <style>
         * {
             box-sizing: border-box;
@@ -3435,14 +3436,27 @@
             carCtx.fillStyle = roadGradient;
             carCtx.fillRect(0, 0, 300, 300);
             
-            // أرصفة جانبية بنمط مخطط
+            // أرصفة جانبية بنمط مخطط + عشب زخرفي
+            carCtx.fillStyle = '#2e7d32';
+            carCtx.fillRect(0, 0, 20, 300);
+            carCtx.fillRect(280, 0, 20, 300);
+            
             carCtx.fillStyle = '#5a6270';
-            carCtx.fillRect(0, 0, 8, 300);
-            carCtx.fillRect(292, 0, 8, 300);
+            carCtx.fillRect(20, 0, 8, 300);
+            carCtx.fillRect(272, 0, 8, 300);
             carCtx.fillStyle = '#ffd700';
             for (var s = 0; s < 300; s += 20) {
-                carCtx.fillRect(0, s, 8, 10);
-                carCtx.fillRect(292, s, 8, 10);
+                carCtx.fillRect(20, s, 8, 10);
+                carCtx.fillRect(272, s, 8, 10);
+            }
+            
+            // شجيرات زخرفية على الأطراف
+            carCtx.fillStyle = '#1b5e20';
+            for (var t = 10; t < 300; t += 40) {
+                carCtx.beginPath();
+                carCtx.arc(9, t, 5, 0, Math.PI * 2);
+                carCtx.arc(291, t + 20, 5, 0, Math.PI * 2);
+                carCtx.fill();
             }
             
             // خطوط الطريق
@@ -3456,6 +3470,31 @@
                 carCtx.stroke();
             }
             carCtx.setLineDash([]);
+            
+            // خطوط حركة خلف السيارات القادمة (إحساس بالسرعة)
+            carCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+            carCtx.lineWidth = 2;
+            for (var e = 0; e < carEnemies.length; e++) {
+                var en = carEnemies[e];
+                carCtx.beginPath();
+                carCtx.moveTo(en.x + en.w * 0.25, en.y - 3);
+                carCtx.lineTo(en.x + en.w * 0.25, en.y - 12);
+                carCtx.moveTo(en.x + en.w * 0.75, en.y - 3);
+                carCtx.lineTo(en.x + en.w * 0.75, en.y - 12);
+                carCtx.stroke();
+            }
+            
+            // توهج خفيف حول سيارة اللاعب لتمييزها
+            var glowGrad = carCtx.createRadialGradient(
+                carPlayer.x + carPlayer.w/2, carPlayer.y + carPlayer.h/2, 5,
+                carPlayer.x + carPlayer.w/2, carPlayer.y + carPlayer.h/2, carPlayer.w
+            );
+            glowGrad.addColorStop(0, 'rgba(255,215,0,0.35)');
+            glowGrad.addColorStop(1, 'rgba(255,215,0,0)');
+            carCtx.fillStyle = glowGrad;
+            carCtx.beginPath();
+            carCtx.arc(carPlayer.x + carPlayer.w/2, carPlayer.y + carPlayer.h/2, carPlayer.w, 0, Math.PI * 2);
+            carCtx.fill();
             
             // رسم سيارة اللاعب (مع نوافذ وظل)
             drawCarShape(carCtx, carPlayer.x, carPlayer.y, carPlayer.w, carPlayer.h, '#ffd700', '#333');
