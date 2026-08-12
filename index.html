@@ -3762,9 +3762,12 @@
                 flappyPipes.push({x: 300, gapY: gapY, passed: false});
             }
             
-            // تحريك الأنابيب وفحص التصادم
+            // تحريك الأنابيب وفحص التصادم (السرعة تزيد 10% كل 10 نقاط)
+            var flappySpeedMultiplier = 1 + Math.floor(flappyScore / 10) * 0.1;
+            var pipeSpeed = 3 * flappySpeedMultiplier;
+            
             for (var i = flappyPipes.length - 1; i >= 0; i--) {
-                flappyPipes[i].x -= 3;
+                flappyPipes[i].x -= pipeSpeed;
                 var p = flappyPipes[i];
                 
                 if (flappyBird.x + flappyBird.w > p.x && flappyBird.x < p.x + flappyPipeWidth) {
