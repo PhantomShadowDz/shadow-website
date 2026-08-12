@@ -1211,7 +1211,11 @@
                     <div class="edu-operation-icon">🐦</div>
                     <div class="game-title">لعبة الطائر</div>
                 </div>
-                <div class="edu-operation-card" onclick="showStore()">
+                <div class="edu-operation-card" onclick="showPacmanGame()">
+                    <div class="edu-operation-icon">👻</div>
+                    <div class="game-title">باك مان</div>
+                </div>
+                <div class="edu-operation-card edu-center-card" onclick="showStore()">
                     <div class="edu-operation-icon">🏪</div>
                     <div class="game-title">المتجر</div>
                 </div>
@@ -1324,6 +1328,29 @@
                 <button class="snake-btn" style="width:100%; height:55px; font-size:1.1em; margin-top:15px;" onclick="flappyJump()">⬆️ اضغط للقفز (أو Space)</button>
                 
                 <button class="submit-answer-btn" style="margin-top:15px;" onclick="startFlappyGame()">🔄 بدء / إعادة اللعبة</button>
+            </div>
+        </div>
+
+        <!-- صفحة لعبة باك مان -->
+        <div id="pacmanGamePage" class="snake-game-page">
+            <button class="back-button" onclick="backToGamesFromPacman()">← العودة</button>
+            
+            <h2 class="leaderboard-title">👻 باك مان 👻</h2>
+            
+            <div class="snake-container">
+                <div class="snake-score">النقاط: <span id="pacmanScore">0</span></div>
+                <canvas id="pacmanCanvas" width="300" height="300"></canvas>
+                
+                <div class="snake-controls">
+                    <div></div>
+                    <button class="snake-btn" onclick="pacmanMove('up')">⬆️</button>
+                    <div></div>
+                    <button class="snake-btn" onclick="pacmanMove('right')">➡️</button>
+                    <button class="snake-btn" onclick="pacmanMove('down')">⬇️</button>
+                    <button class="snake-btn" onclick="pacmanMove('left')">⬅️</button>
+                </div>
+                
+                <button class="submit-answer-btn" style="margin-top:20px;" onclick="startPacmanGame()">🔄 بدء / إعادة اللعبة</button>
             </div>
         </div>
 
@@ -3858,6 +3885,222 @@
             flappyCtx.font = '16px Arial';
             flappyCtx.fillText('النقاط: ' + flappyScore, 150, 160);
             flappyCtx.fillText('🪙 ذهب مكتسب: ' + flappyGold, 150, 185);
+        }
+
+        // ===== لعبة باك مان =====
+        var pacmanCanvas, pacmanCtx;
+        var pacmanCellSize = 30;
+        var pacmanMazeTemplate = [
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,0,1],
+            [1,0,1,0,0,0,1,0,0,1],
+            [1,0,1,1,1,0,1,0,1,1],
+            [1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,0,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1]
+        ];
+        var pacmanMazeState = [];
+        var pacmanPlayer = {row: 1, col: 1};
+        var pacmanGhost = {row: 7, col: 8};
+        var pacmanScore = 0;
+        var pacmanGold = 0;
+        var pacmanInterval = null;
+        var pacmanRunning = false;
+
+        function showPacmanGame() {
+            currentUsername = getCurrentUsername();
+            document.getElementById('gamesMenuPage').style.display = 'none';
+            document.getElementById('pacmanGamePage').style.display = 'block';
+            
+            pacmanCanvas = document.getElementById('pacmanCanvas');
+            pacmanCtx = pacmanCanvas.getContext('2d');
+            
+            startPacmanGame();
+        }
+
+        function backToGamesFromPacman() {
+            if (pacmanInterval) clearInterval(pacmanInterval);
+            pacmanRunning = false;
+            document.getElementById('pacmanGamePage').style.display = 'none';
+            document.getElementById('gamesMenuPage').style.display = 'block';
+        }
+
+        function startPacmanGame() {
+            if (pacmanInterval) clearInterval(pacmanInterval);
+            
+            pacmanMazeState = JSON.parse(JSON.stringify(pacmanMazeTemplate));
+            pacmanPlayer = {row: 1, col: 1};
+            pacmanGhost = {row: 7, col: 8};
+            pacmanScore = 0;
+            pacmanGold = 0;
+            document.getElementById('pacmanScore').textContent = pacmanScore;
+            pacmanMazeState[pacmanPlayer.row][pacmanPlayer.col] = 2;
+            pacmanRunning = true;
+            
+            drawPacmanGame();
+            pacmanInterval = setInterval(pacmanGhostMove, 400);
+        }
+
+        function pacmanMove(dir) {
+            if (!pacmanRunning) return;
+            
+            var newRow = pacmanPlayer.row;
+            var newCol = pacmanPlayer.col;
+            if (dir === 'up') newRow--;
+            else if (dir === 'down') newRow++;
+            else if (dir === 'left') newCol--;
+            else if (dir === 'right') newCol++;
+            
+            if (newRow < 0 || newRow >= pacmanMazeState.length || newCol < 0 || newCol >= pacmanMazeState[0].length) return;
+            if (pacmanMazeState[newRow][newCol] === 1) return;
+            
+            pacmanPlayer.row = newRow;
+            pacmanPlayer.col = newCol;
+            
+            if (pacmanMazeState[newRow][newCol] === 0) {
+                pacmanMazeState[newRow][newCol] = 2;
+                pacmanScore++;
+                pacmanGold++;
+                document.getElementById('pacmanScore').textContent = pacmanScore;
+            }
+            
+            checkPacmanCollision();
+            if (pacmanRunning) {
+                drawPacmanGame();
+                checkPacmanWin();
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!pacmanRunning) return;
+            if (e.key === 'ArrowUp') pacmanMove('up');
+            else if (e.key === 'ArrowDown') pacmanMove('down');
+            else if (e.key === 'ArrowLeft') pacmanMove('left');
+            else if (e.key === 'ArrowRight') pacmanMove('right');
+        });
+
+        function pacmanGhostMove() {
+            if (!pacmanRunning) return;
+            
+            var dr = pacmanPlayer.row - pacmanGhost.row;
+            var dc = pacmanPlayer.col - pacmanGhost.col;
+            var moves = [];
+            
+            if (Math.random() < 0.25) {
+                var randomDirs = [[1,0],[-1,0],[0,1],[0,-1]];
+                moves.push(randomDirs[Math.floor(Math.random() * 4)]);
+            } else if (Math.abs(dr) > Math.abs(dc)) {
+                moves.push(dr > 0 ? [1,0] : [-1,0]);
+                moves.push(dc > 0 ? [0,1] : [0,-1]);
+            } else {
+                moves.push(dc > 0 ? [0,1] : [0,-1]);
+                moves.push(dr > 0 ? [1,0] : [-1,0]);
+            }
+            
+            for (var i = 0; i < moves.length; i++) {
+                var nr = pacmanGhost.row + moves[i][0];
+                var nc = pacmanGhost.col + moves[i][1];
+                if (nr >= 0 && nr < pacmanMazeState.length && nc >= 0 && nc < pacmanMazeState[0].length && pacmanMazeState[nr][nc] !== 1) {
+                    pacmanGhost.row = nr;
+                    pacmanGhost.col = nc;
+                    break;
+                }
+            }
+            
+            checkPacmanCollision();
+            if (pacmanRunning) drawPacmanGame();
+        }
+
+        function checkPacmanCollision() {
+            if (pacmanGhost.row === pacmanPlayer.row && pacmanGhost.col === pacmanPlayer.col) {
+                pacmanGameOver();
+            }
+        }
+
+        function checkPacmanWin() {
+            var dotsLeft = false;
+            for (var r = 0; r < pacmanMazeState.length; r++) {
+                for (var c = 0; c < pacmanMazeState[r].length; c++) {
+                    if (pacmanMazeState[r][c] === 0) dotsLeft = true;
+                }
+            }
+            if (!dotsLeft) {
+                pacmanWin();
+            }
+        }
+
+        function drawPacmanGame() {
+            pacmanCtx.fillStyle = '#000';
+            pacmanCtx.fillRect(0, 0, 300, 300);
+            
+            for (var r = 0; r < pacmanMazeState.length; r++) {
+                for (var c = 0; c < pacmanMazeState[r].length; c++) {
+                    var x = c * pacmanCellSize;
+                    var y = r * pacmanCellSize;
+                    if (pacmanMazeState[r][c] === 1) {
+                        pacmanCtx.fillStyle = '#1a4fa0';
+                        pacmanCtx.fillRect(x, y, pacmanCellSize, pacmanCellSize);
+                    } else if (pacmanMazeState[r][c] === 0) {
+                        pacmanCtx.fillStyle = '#fff';
+                        pacmanCtx.beginPath();
+                        pacmanCtx.arc(x + pacmanCellSize / 2, y + pacmanCellSize / 2, 3, 0, Math.PI * 2);
+                        pacmanCtx.fill();
+                    }
+                }
+            }
+            
+            // اللاعب (باك مان)
+            pacmanCtx.fillStyle = '#ffd700';
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(pacmanPlayer.col * pacmanCellSize + pacmanCellSize / 2, pacmanPlayer.row * pacmanCellSize + pacmanCellSize / 2, pacmanCellSize / 2 - 3, 0.25 * Math.PI, 1.75 * Math.PI);
+            pacmanCtx.lineTo(pacmanPlayer.col * pacmanCellSize + pacmanCellSize / 2, pacmanPlayer.row * pacmanCellSize + pacmanCellSize / 2);
+            pacmanCtx.fill();
+            
+            // الشبح
+            pacmanCtx.fillStyle = '#ff4444';
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(pacmanGhost.col * pacmanCellSize + pacmanCellSize / 2, pacmanGhost.row * pacmanCellSize + pacmanCellSize / 2 - 3, pacmanCellSize / 2 - 3, Math.PI, 0);
+            pacmanCtx.lineTo(pacmanGhost.col * pacmanCellSize + pacmanCellSize - 3, pacmanGhost.row * pacmanCellSize + pacmanCellSize - 3);
+            pacmanCtx.lineTo(pacmanGhost.col * pacmanCellSize + 3, pacmanGhost.row * pacmanCellSize + pacmanCellSize - 3);
+            pacmanCtx.fill();
+        }
+
+        function pacmanGameOver() {
+            clearInterval(pacmanInterval);
+            pacmanRunning = false;
+            
+            saveEarnedGold(pacmanGold);
+            
+            pacmanCtx.fillStyle = 'rgba(0,0,0,0.7)';
+            pacmanCtx.fillRect(0, 0, 300, 300);
+            pacmanCtx.fillStyle = '#fff';
+            pacmanCtx.font = 'bold 20px Arial';
+            pacmanCtx.textAlign = 'center';
+            pacmanCtx.fillText('💔 أمسك بك الشبح!', 150, 130);
+            pacmanCtx.font = '16px Arial';
+            pacmanCtx.fillText('النقاط: ' + pacmanScore, 150, 160);
+            pacmanCtx.fillText('🪙 ذهب مكتسب: ' + pacmanGold, 150, 185);
+        }
+
+        function pacmanWin() {
+            clearInterval(pacmanInterval);
+            pacmanRunning = false;
+            
+            saveEarnedGold(pacmanGold);
+            
+            pacmanCtx.fillStyle = 'rgba(0,0,0,0.7)';
+            pacmanCtx.fillRect(0, 0, 300, 300);
+            pacmanCtx.fillStyle = '#4caf50';
+            pacmanCtx.font = 'bold 20px Arial';
+            pacmanCtx.textAlign = 'center';
+            pacmanCtx.fillText('🎉 فزت! أكلت كل النقاط!', 150, 130);
+            pacmanCtx.fillStyle = '#fff';
+            pacmanCtx.font = '16px Arial';
+            pacmanCtx.fillText('النقاط: ' + pacmanScore, 150, 160);
+            pacmanCtx.fillText('🪙 ذهب مكتسب: ' + pacmanGold, 150, 185);
         }
 
         // ===== المتجر =====
